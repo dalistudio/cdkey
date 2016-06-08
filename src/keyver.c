@@ -24,8 +24,8 @@ int main(int argc, char *argv[])
 	else
 	{
 		printf("ERROR\n");
-		printf("usage: keyver.exe secret key\n");
 		printf("");
+		printf("usage: keyver.exe secret key\n");
 	}
 
 	return 0;

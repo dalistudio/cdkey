@@ -25,8 +25,8 @@ int main(int argc, char *argv[])
 	else
 	{
 		printf("ERROR\n");
-		printf("usage: keygen.exe secret type data\n");
 		printf("");
+		printf("usage: keygen.exe secret type data\n");
 	}
 
 	return 0;
