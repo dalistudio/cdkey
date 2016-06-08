@@ -8,6 +8,7 @@
 #include "hash.h"
 #include "sign.h"
 
+#include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -114,8 +115,8 @@ big keygen(unsigned int Key, unsigned char Type, unsigned char Data)
 	mip->IOBASE = 16; // 使用十六进制
 	cinstr(upperlimit, "100000000000000000000");// 签名不能大于80bit
 
-	srand((unsigned int)time(NULL));  // 只在第一次运行时初始化随机函数
-	irand((unsigned int)time(NULL));
+	// GetTickCount返回从操作系统启动到当前所经过的毫秒数
+	irand(GetTickCount()); // 初始化随机函数，便于 bigrand() 取随机数
 
 	r = mirvar(0); // 随机数 r
 	rx = mirvar(0);
