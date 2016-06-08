@@ -1,7 +1,7 @@
 /*
 * Copyright (c) 2014-2016 Dali Wang, All Rights Reserved.
 * Dali Wang <wangdali@qq.com>
-* ECC KEY VER
+* ECC KEY VERIFIER
 */
 
 #include "base32.h"
@@ -9,13 +9,17 @@
 #include "sign.h"
 #include "verifier.h"
 
-int main(int argc,char *argv[])
+int main(int argc, char *argv[])
 {
-	if(argc==3)
+	if (argc == 3)
 	{
-		unsigned int Key =0;
-		Key = strtoul(argv[1],NULL,16);
-		verifier(Key,(unsigned char*)argv[2]);
+		unsigned int Key = 0;
+
+		// 将输入的十六进制字符转换成整数
+		Key = strtoul(argv[1], NULL, 16);
+
+		// 验证 CDKEY
+		verifier(Key, (unsigned char*)argv[2]);
 	}
 	else
 	{
