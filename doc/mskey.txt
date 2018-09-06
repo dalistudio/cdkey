@@ -1,0 +1,140 @@
+MSKey Readme
+Abstract
+Microsoft Windows Server 2003 VLK requires a VLK key to install. Commonly, for illegal users, this key is a leaked key, and thousands of piracy users use the same key to install their Windows. The problem is that the piracy users can use the product now, but not forever, because Microsoft would probably include the leaked key list in the further service packs (e.g. Microsoft prohibited several Windows XP VLK keys in service pack 1). So, it is necessary to install Windows with different keys for different illegal users.
+By tracing Windows product key verification program, I successfully extracted the algorithm MS uses (some Public Key Infrastructure), and broke the private key uses to generate product keys.
+Validation Process
+1.        Decode
+The following computations are based on this product key:
+JCF8T-2MG8G-Q6BBK-MQKGT-X3GBB
+The character “-“ does not contain any information, so, the MS product key is composed of 25-digit-character. Microsoft only uses “BCDFGHJKMPQRTVWXY2346789” to encode product key, in order to avoid ambiguous characters (e.g. “I” and “1”, “0” and “O”). The quantity of information that a product key contain is at most . To convert a 25-digit key to binary data, we need to
+a.        convert “JCF8T2MG8GQ6BBKMQKGTX3GBB“ to “6 1 3 22 ......“, where ‘B’=0, ‘C’=1, ‘D’=2 … we call the array “6 1 3 22…” base24[]
+b.        compute decoded = , the result is: 00 C5 31 77 E8 4D BE 73 2C 55 47 35 BD 8D 01 00 (little-endian)
+c.        The decoded result can be divided into 12bit + 31bit + 62bit + 9bit, and we call theses 4 parts 12bit: OS Family, 31bit: Hash, 62bit: Signature, and 9bit: Prefix.
+
+2.        Verify
+If you want to understand what I am talking about in this section, please refer to some Elliptic Curve Cryptography materials.
+Before verifying a product key, we need to compute the 4 parts mentioned above: OS Family, Hash, Signature, and Prefix.
+
+Microsoft Product-key Identification program uses a public key stored in PIDGEN.DLL’s BINK resource, which is an Elliptic Curve Cryptography public key, which is composed of:
+p, a, b construct an elliptic curve
+G(x,y) represents a point on the curve, and this point is so called “generator”
+K(x,y) represents a point on the curve, and this point is the product of integer k and the generator G.
+
+Without knowing the private key k, we cannot produce a valid key, but we can validate a key using public key:{p, a, b, G, K}
+
+1.        compute H=SHA-1(5D OS Family,Hash, prefix, 00 00) the total length is 11 byte. H is 160-bit long, and we only need the first 2 words. Right lift H’s second word by 2 bits. E.g. if SHA-1() returns FE DC BA 98 76 54 32 10, H= FE DC BA 98 1D 95 0C 04.
+2.        compute R(rx,ry)= Signature * (Signature*G + H*K)  (mod p)
+3.        compute SHA-1(79 OS Family, rx, ry) the total input length = 1+2+64*2=131 bytes. And compare Hash and result, and if identical, the key is valid.
+
+Producing A Valid Key!
+We assume the private key k is known (sure, Microsoft won’t public this value, so we have to break it by ourselves).
+The equation in the product key validation system is as below:
+
+Hash=SHA(Signature*(Signature*G+SHA(Hash)*K) (mod p))
+
+What we need is to calculate a Signature which satisfies the above equation.
+1.        Randomly choose an integer r, and compute R(rx,ry)=r * G
+2.        Compute Hash= SHA-1(79 OS Family, rx, ry) the total input length = 1+2+64*2=131 bytes, and we get the first 62bit result.
+3.        compute H=SHA-1(5D OS Family,Hash, prefix, 00 00) the total length is 11 byte, and we need first 2 words, and right lift H’s second word by 2 bits.
+And now, we get an equation as below:
+
+Signature*(Signature*G+H*K) = r * G (mod p)
+
+By replacing K with k * G, we get the next equation:
+
+Signature*(Signature*G+H*k*G) = r * G (mod p)
+, where n is the order of point G on the curve
+
+Note: not every number has a square root, so maybe we need to go back to step 1 for several times.
+Get Private-key From Public Key
+I’ve mentioned that the private key k is not included in the BINK resource, so we need to break it out by ourselves.
+In the public key:
+K(x,y) = k * G, we only know the generator G, and the product K, but it is hard to get k.
+The effective method of getting k from K(x,y) = k * G is Pollard’s Rho (or its variation) method, whose complexity is merely , where n is the order of G. (n is not included in public key resource, so, we need to get n by Schoof’s algorithm)
+Because a user cannot suffer a too long product key, the Signature must be short enough to be convenient. And Microsoft chooses 62 bit as the length of signature, hence, n is merely 62-bit long. Therefore, the complexity of computing the private key k is O(2^31).
+
+-yag
+
+
+==================================================================================
+
+MSKEY 自述文件
+
+摘要
+
+微软的Windows Server 2003 VOL版本需要一个VLK来安装。通常，对于盗版用户来说，只有用被泄露出来的VLK来进行安装，所以数以千计的盗版用户都只用一个CDKEY来安装它们的系统。问题是，虽然现在可以用，但并不是长久之计。因为微软会在未来发布的Service Pack中封掉泄露出来的CDKEY(比如，微软已经在SP1种封杀了一些VLK)，所以，每个不同的盗版用户都用不同的VLK来安装系统。
+
+通过跟踪调试Windows的CDKEY验证程序，我成功的提取了微软验证CDKEY所用的
+算法(一些公钥(Public Key)底层结构)，而且破解了用来产生CDKEY的私钥(Private Key)。
+
+1.解码
+
+下面的计算都是基于这个序列号的：
+
+JCF8T-2MG8G-Q6BBK-MQKGT-X3GBB
+
+因为字符"-"不包含任何信息，所以微软的产品序列号实际上是由25个字符组成的。另外，微软没有使用易混淆的字符，比如"I"和"1"，"O"和 "0"，其产品序列号之包括"BCDFGHJKMPQRTVWXY2346789"进行编码。于是，一个产品序列号中，最多包含log22425约等于 114个bit的信息。要把这些字符解码为2进制，我们需要：
+
+a.将上面的序列号"JCF8T2MG8GQ6BBKMQKGTX3GBB"转化为"6 1 3 22 ......"，即，‘B'=0, ‘C'=1, ‘D'=2 ......，我们定义得到的数组为base24[]。
+
+b.计算解码：decode=∑{base24[i]*24^(24-i)}(i=0 to 24)，运算的结果是：00 C5 31 77 E8 4D BE 73 2C 55 47 35 BD 8D 01 00 (采用little-endian表示)(译者注：俗称低位在前存放方式，和x86一样)
+
+c. 解码结果可以被分为：12bit + 31bit + 62bit + 9bit，四个部分分别表达的含义为：12bit: 操作系统家族码, 31bit: Hash码, 62bit: 签名码, 9bit: 前缀码.
+
+2.校验
+
+如果阅读本段遇到了麻烦，请首先参阅一些椭圆曲线密码论（Elliptic Curve Cryptography,ECC）材料。
+
+在开始校验产品序列号前，我们首先应将上述4个部分12bit: 操作系统家族码, 31bit: Hash码, 62bit: 签名码, 9bit: 前缀码.进行一些计算。
+
+微软产品序列号认证程序采用的是一个ECC公钥，这个公钥可以在PIDGEN.DLL的 BINK资源中找到，它包含：
+
+p,a,b构造的曲线：y2=x3+ax+b(mod p)
+G(x,y) 代表曲线上的一个点，称为"generator"(生成因子或生成点)。
+K(x,y)代表曲线上的一点，由某个整数k以及"generator"点G决定。
+
+没有私钥k，则我们无法创建一个有效的序列号，但是我们可以通过公钥key:{p, a, b, G, K}来验证一个序列号。
+
+1. 计算 H=SHA-1（5D 操作系统家族码，Hash码，前缀码，00 00），总长为11个byte。H长160个bit，我们需要的只是其前两个字(译者注：前八个字节)。将H的第二个字(第5个字节到第8个字节)进行移位运算，右移2位。比如，若 SHA-1返回了FE DC BA 98 76 54 32 10，则H=FE DC BA 98 1D 95 0C 04。（译者注：H的前面FE DC BA 98保留，将76 54 32 10逻辑右移2位）。
+
+2.计算 R(rx,ry)=签名码 * (签名码*G + H*K) (mod p)
+
+3.计算 SHA-1(79 操作系统家族码, rx, ry)总输入长度为 1+2+64*2=131个字节。最后比较Hash码与计算结果，如果两者相同，则序列号是可用的！
+
+创建可用的序列号！
+
+我们假设我们已经获取了私钥k，（当然，微软不会公布k的值，我们只有自己破解它了），那么序列号验证系统的计算等式如下：
+
+Hash码=SHA(签名码*(签名码*G+SHA(Hash码)*K) (mod p))
+
+我们需要做的，便是计算出一个满足上面等式的签名码。 过程如下:
+
+1.随机取一个整数r，并计算 R(rx,ry)=r * G
+
+2.计算Hash= SHA-1(79 操作系统家族码, rx, ry) ，输入总长为1+2+64*2=131个字节,我们只需要前62个bit作为结果。
+
+3.计算 H=SHA-1(5D 操作系统家族,Hash码, 前缀, 00 00) ，其总长为11个字节，我们只需要其前面的2个字，并且将H的第二个字右移2位。（译者注：具体方法见前文的验证部分）现在，我们有了如下等式:
+
+签名码*(签名码*G+H*K) = r * G (mod p)
+
+将K=k*G代入，有:
+
+签名码*(签名码*G+H*k*G) = r * G (mod p) ,签名码*签名码+H*k*签名码-r=0 (mod n)式中n为椭圆上点G的级。
+
+解上面的方程，得到签名码的值：签名码=0.5*{-H*k±root[(H*k)2+4r]}(mod n),
+
+注意：因为一元二次方程需满足判别式大于等于零的要求，因此如果签名码
+无实数根，则一切要从第一步重新开始。
+
+由公钥获取私钥
+
+我曾提到过私钥k并没有被包含在BINK的资源中，所以我们需要自己破解它。
+在公钥中：
+K(x,y) = k * G
+
+我们只知道generator G, K, 但是难以获得k的值.
+
+由 K(x,y) = k * G获得k的有效方法是Pollard's Rho (或者是它的变体) , 其复杂处只在于n应为G的级。 (n并不包括在公钥的资源中，因此我们需要通过
+Schoof's 法则来获得n值)
+
+因为用户不可能承受过于冗长的序列号的输入，因此Signature还是应该比较短的. 微软公司选择使用62位长的签名码，因此，n仅仅有62位长，计算私钥k的复杂度为 O(2^31).  
