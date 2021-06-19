@@ -33,6 +33,15 @@
 
 release/
 debug/
+
+ui/Debug/
+ui/Release/
+ui/keygenui/Debug/
+ui/keygenui/Release/
+ui/verifierui/Debug/
+ui/verifierui/Release/
+
+
 .vs/
 ipch/
 
