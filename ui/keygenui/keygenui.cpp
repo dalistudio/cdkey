@@ -52,9 +52,18 @@ INT_PTR CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch(uMsg) {
         case WM_INITDIALOG:
 			// 初始化对话框代码
-			SetDlgItemText(hwnd,IDC_KEY,"0xFFFFFFFF");
-			SetDlgItemText(hwnd,IDC_TYPE,"0x3F");
-			SetDlgItemText(hwnd,IDC_DATA,"0xFF");
+			// 初始化产品信息
+			SetDlgItemText(hwnd, IDC_COMPANY, "DALIWARE"); // 公司名称
+			SetDlgItemText(hwnd, IDC_PRODUCT, "uBoss Core"); // 产品名称
+			SetDlgItemText(hwnd, IDC_VERSION, "2.0"); // 版本信息
+			SetDlgItemText(hwnd, IDC_FAMILY, "Community Edition"); // 家族系列
+
+
+			SetDlgItemText(hwnd,IDC_KEY,"0xFFFFFFFF"); // 设备编号
+			SetDlgItemText(hwnd,IDC_TYPE,"0x3F"); // 曲线编号
+			SetDlgItemText(hwnd,IDC_DATA,"0xFF"); // 功能授权1
+			SetDlgItemText(hwnd, IDC_DATA2, "0xFF"); // 功能授权2
+			SetDlgItemText(hwnd, IDC_CHECK, "0xFF"); // 数据校验
 			break;
 		// 如果是命令事件（按钮等）
         case WM_COMMAND:
