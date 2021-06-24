@@ -684,14 +684,15 @@ int main(int argc,char **argv)
 {
     ofstream ofile;
     int low,lower,ip,pbits,lp,i,j,jj,m,n,nl,L,k,tau,lambda;
-    mr_utype t[100];
+    mr_utype t[200];
     Big a,b,p,nrp,x,y,d,s;
     PolyMod XX,XP,YP,XPP,YPP;
-    PolyMod Pf[100],P2f[100],P3f[100];
-    Poly G,P[100],P2[100],P3[100],Y2,Y4,Fl;
-    miracl *mip=&precision;
+    PolyMod Pf[200],P2f[200],P3f[200];
+    Poly G,P[200],P2[200],P3[200],Y2,Y4,Fl;
+    //miracl *mip=&precision;
+    miracl *mip = mirsys(1024, 10);
     BOOL escape,search,fout,dir,gotP,gotA,gotB,eigen,anomalous;
-    BOOL permisso[100];
+    BOOL permisso[200];
     ZZn delta,j_invariant;
     ZZn EB,EA,T,T1,T3,A2,A4,AZ,AW;
     int Base; 
